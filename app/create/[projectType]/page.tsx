@@ -1,60 +1,91 @@
-'use client';
+"use client";
 
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ServiceForm } from '@/components/ServiceForm';
+import React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { PriceSummary } from "@/components/PriceSummary";
+import { usePriceCalculator } from "@/hooks/usePriceCalculator";
+import { projectTypes } from "@/data/projectTypes";
 
-export default function ProjectTypePage() {
-  const params = useParams();
-  const router = useRouter();
-  const [projectType, setProjectType] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (params.projectType && typeof params.projectType === 'string') {
-      setProjectType(params.projectType);
-    } else {
-      setProjectType(null);
-    }
-  }, [params.projectType]);
-
-  const handleSubmit = (data: any) => {
-    console.log('Form data submitted:', data);
-    // Qui puoi gestire il salvataggio dei dati e la navigazione alla pagina successiva
-    router.push('/create/next-step');
-  };
-
-  const handleBack = () => {
-    router.back();
-  };
-
-  if (!projectType) {
-    return (
-      <Card className="max-w-2xl mx-auto mt-8">
-        <CardContent className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Tipo di Progetto non Valido</h2>
-          <p>Seleziona un tipo di progetto valido.</p>
-          <Button className="mt-4" onClick={() => router.push('/create')}>
-            Torna alla Selezione del Progetto
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+export default function CreateProject() {
+  const {
+    projectType,
+    setProjectType,
+    projectScope,
+    setProjectScope,
+    estimatedPrice,
+  } = usePriceCalculator();
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Configurazione del Progetto</h2>
-          <ServiceForm
-            projectType={projectType}
-            onSubmit={handleSubmit}
-            onBack={handleBack}
-          />
-        </CardContent>
-      </Card>
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Crea il Tuo Progetto</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Tipo di Progetto</h2>
+          <RadioGroup
+            value={projectType || ""}
+            onValueChange={(value) =>
+              setProjectType(value as typeof projectType)
+            }
+            className="space-y-4"
+          >
+            {Object.entries(projectTypes).map(
+              ([key, { name, description }]) => (
+                <Card key={key}>
+                  <CardContent className="flex items-center space-x-4 p-4">
+                    <RadioGroupItem value={key} id={key} />
+                    <Label htmlFor={key} className="flex flex-col">
+                      <span className="font-semibold">{name}</span>
+                      <span className="text-sm text-gray-500">
+                        {description}
+                      </span>
+                    </Label>
+                  </CardContent>
+                </Card>
+              )
+            )}
+          </RadioGroup>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">
+            Ambito del Progetto
+          </h2>
+          <RadioGroup
+            value={projectScope}
+            onValueChange={(value) =>
+              setProjectScope(value as "new" | "restyling")
+            }
+            className="space-y-4"
+          >
+            <Card>
+              <CardContent className="flex items-center space-x-4 p-4">
+                <RadioGroupItem value="new" id="new" />
+                <Label htmlFor="new">Nuovo Progetto</Label>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="flex items-center space-x-4 p-4">
+                <RadioGroupItem value="restyling" id="restyling" />
+                <Label htmlFor="restyling">Restyling</Label>
+              </CardContent>
+            </Card>
+          </RadioGroup>
+        </div>
+
+        <div>
+          <PriceSummary estimatedPrice={estimatedPrice} />
+          {projectType && (
+            <div className="mt-8">
+              <Link href={`/create/${projectType}`}>
+                <Button className="w-full">Prosegui</Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
